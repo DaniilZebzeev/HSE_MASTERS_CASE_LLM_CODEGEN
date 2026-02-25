@@ -1,19 +1,52 @@
-name: hello_api
-version: "0.1.0"
-description: "Minimal FastAPI example project"
+service:
+  name: hello_api
+  description: "Минимальный пример FastAPI-проекта"
+  stack: python-fastapi
+
+entities:
+  - name: Item
+    fields:
+      - name: id
+        type: int
+        required: true
+      - name: title
+        type: str
+        required: true
+
 endpoints:
-  - path: /health
+  - name: health_check
     method: GET
-    summary: "Health check"
-    tags:
-      - system
-  - path: /items
+    path: /health
+    responses:
+      - status_code: 200
+
+  - name: list_items
     method: GET
-    summary: "List items"
-    tags:
-      - items
-  - path: /items/{item_id}
+    path: /items
+    responses:
+      - status_code: 200
+        entity: Item
+
+  - name: get_item
     method: GET
-    summary: "Get item by ID"
-    tags:
-      - items
+    path: /items/{item_id}
+    responses:
+      - status_code: 200
+        entity: Item
+
+  - name: create_item
+    method: POST
+    path: /items
+    request:
+      entity: Item
+    responses:
+      - status_code: 201
+        entity: Item
+
+generation:
+  tests: true
+  style:
+    formatter: black
+    linter: ruff
+  repair_loop:
+    max_iters: 3

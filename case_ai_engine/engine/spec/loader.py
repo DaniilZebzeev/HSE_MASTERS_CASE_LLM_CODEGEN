@@ -1,33 +1,36 @@
-"""Загрузчик спецификации: читает YAML или JSON в сырой словарь."""
+"""Загрузчик спецификации: читает YAML/JSON и возвращает Spec."""
 
 from __future__ import annotations
 
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 import yaml
+
+from engine.spec.models import Spec
+from engine.spec.validator import validate_spec
 
 logger = logging.getLogger(__name__)
 
 
-def load_spec(path: Path) -> dict[str, Any]:
-    """Загрузить файл спецификации YAML/JSON и вернуть сырой словарь."""
+def load_spec(path: str | Path) -> Spec:
+    """Загрузить файл спецификации YAML/JSON и вернуть провалидированный Spec."""
+    path = Path(path)
     suffix = path.suffix.lower()
     text = path.read_text(encoding="utf-8")
 
     if suffix in {".yaml", ".yml"}:
-        data = yaml.safe_load(text)
+        raw = yaml.safe_load(text)
     elif suffix == ".json":
-        data = json.loads(text)
+        raw = json.loads(text)
     else:
         raise ValueError(f"Неподдерживаемый формат спецификации: {suffix!r}")
 
-    if not isinstance(data, dict):
+    if not isinstance(raw, dict):
         raise ValueError(
-            f"Спецификация должна быть словарём, получено: {type(data).__name__}"
+            f"Спецификация должна быть словарём, получено: {type(raw).__name__}"
         )
 
     logger.info("Спецификация загружена из %s", path)
-    return data
+    return validate_spec(raw)
