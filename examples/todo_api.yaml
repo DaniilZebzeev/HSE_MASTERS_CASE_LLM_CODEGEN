@@ -1,0 +1,74 @@
+# DSL specification for a simple Todo REST API.
+# Run with: codegen generate examples/todo_api.yaml --model llama3
+
+name: todo_api
+version: "0.1.0"
+description: "Simple Todo REST API"
+
+models:
+  - name: Todo
+    description: "A single todo item"
+    fields:
+      - name: id
+        type: int
+        optional: true
+        description: "Auto-assigned identifier"
+      - name: title
+        type: str
+        description: "Short title of the task"
+      - name: description
+        type: str
+        optional: true
+        default: ""
+        description: "Detailed description"
+      - name: done
+        type: bool
+        default: false
+        description: "Completion flag"
+
+  - name: TodoCreate
+    description: "Payload for creating a new todo"
+    fields:
+      - name: title
+        type: str
+      - name: description
+        type: str
+        optional: true
+        default: ""
+      - name: done
+        type: bool
+        default: false
+
+endpoints:
+  - path: /todos
+    method: GET
+    summary: "List all todos"
+    tags: [todos]
+    response_model: "list[Todo]"
+
+  - path: /todos
+    method: POST
+    summary: "Create a new todo"
+    tags: [todos]
+    request_body: TodoCreate
+    response_model: Todo
+    status_code: 201
+
+  - path: /todos/{todo_id}
+    method: GET
+    summary: "Get a todo by ID"
+    tags: [todos]
+    response_model: Todo
+
+  - path: /todos/{todo_id}
+    method: PUT
+    summary: "Update a todo"
+    tags: [todos]
+    request_body: TodoCreate
+    response_model: Todo
+
+  - path: /todos/{todo_id}
+    method: DELETE
+    summary: "Delete a todo"
+    tags: [todos]
+    status_code: 204

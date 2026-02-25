@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "llm-codegen"
+version = "0.1.0"
+description = "DSL (YAML/JSON) → FastAPI code generator using a local LLM via Ollama"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.6.0",
+    "pyyaml>=6.0.1",
+    "httpx>=0.27.0",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "black>=24.3.0",
+    "ruff>=0.3.4",
+    "pytest>=8.1.0",
+    "pytest-asyncio>=0.23.5",
+]
+
+[project.scripts]
+codegen = "codegen.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["codegen*", "engine*"]
+
+# ---------------------------------------------------------------------------
+# Black
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["codegen", "engine"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+python_functions = ["test_*"]

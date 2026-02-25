@@ -1,0 +1,38 @@
+{
+  "name": "notes_api",
+  "version": "0.1.0",
+  "description": "Simple notes API",
+  "models": [
+    {
+      "name": "Note",
+      "description": "A text note",
+      "fields": [
+        {"name": "id", "type": "int", "optional": true},
+        {"name": "title", "type": "str"},
+        {"name": "body", "type": "str", "optional": true, "default": ""}
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "path": "/notes",
+      "method": "GET",
+      "summary": "List all notes",
+      "response_model": "list[Note]"
+    },
+    {
+      "path": "/notes",
+      "method": "POST",
+      "summary": "Create a note",
+      "request_body": "Note",
+      "response_model": "Note",
+      "status_code": 201
+    },
+    {
+      "path": "/notes/{note_id}",
+      "method": "DELETE",
+      "summary": "Delete a note",
+      "status_code": 204
+    }
+  ]
+}
