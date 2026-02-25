@@ -1,0 +1,18 @@
+{% include 'system_rules.j2' %}
+
+## Task
+Fix the errors listed below in the file `{{ file_path }}`.
+
+## Errors
+```
+{{ errors }}
+```
+
+## Current File Content
+```python
+{{ file_content }}
+```
+
+## Output
+Return ONLY a unified diff in standard format (--- a/file +++ b/file).
+No explanations. No markdown code fences. Diff only.

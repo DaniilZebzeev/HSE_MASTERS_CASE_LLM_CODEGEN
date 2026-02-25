@@ -1,0 +1,19 @@
+name: hello_api
+version: "0.1.0"
+description: "Minimal FastAPI example project"
+endpoints:
+  - path: /health
+    method: GET
+    summary: "Health check"
+    tags:
+      - system
+  - path: /items
+    method: GET
+    summary: "List items"
+    tags:
+      - items
+  - path: /items/{item_id}
+    method: GET
+    summary: "Get item by ID"
+    tags:
+      - items

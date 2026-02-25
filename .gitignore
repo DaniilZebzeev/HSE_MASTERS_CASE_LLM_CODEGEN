@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Claude Code (локальные данные агента)
+.claude/
+
+# Сгенерированные выходные файлы проекта
+case_ai_engine/outputs/*
+!case_ai_engine/outputs/.gitkeep

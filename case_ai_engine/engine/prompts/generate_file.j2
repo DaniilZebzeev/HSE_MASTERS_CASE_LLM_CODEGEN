@@ -1,0 +1,13 @@
+{% include 'system_rules.j2' %}
+
+## Task
+Generate the file `{{ file_path }}` for a FastAPI project.
+
+## Project Specification
+```json
+{{ spec | tojson(indent=2) }}
+```
+
+## Output
+Return ONLY the complete file contents.
+No explanations. No markdown code fences. No comments about the output.
