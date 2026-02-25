@@ -1,13 +1,17 @@
 {% include 'system_rules.j2' %}
 
-## Task
-Generate the file `{{ file_path }}` for a FastAPI project.
+## Задача
+Сгенерируй файл `{{ file_path }}`.
 
-## Project Specification
-```json
-{{ spec | tojson(indent=2) }}
-```
+## Назначение
+{{ purpose }}
 
-## Output
+## Фрагмент спецификации
+{{ spec_snippet }}
+{% if project_conventions %}
+## Соглашения проекта
+{{ project_conventions }}
+{% endif %}
+## Вывод
 Return ONLY the complete file contents.
 No explanations. No markdown code fences. No comments about the output.

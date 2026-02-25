@@ -1,18 +1,27 @@
 {% include 'system_rules.j2' %}
 
-## Task
-Fix the errors listed below in the file `{{ file_path }}`.
+## Задача
+Исправь ошибки в файлах, перечисленных ниже.
 
-## Errors
+## Логи ошибок
 ```
-{{ errors }}
+{{ logs }}
 ```
 
-## Current File Content
+## Проблемные файлы
+{% for f in failing_files %}- {{ f }}
+{% endfor %}
+## Фрагменты файлов
+{% for path, content in snippets.items() %}
+### {{ path }}
 ```python
-{{ file_content }}
+{{ content }}
 ```
-
-## Output
+{% endfor %}
+{% if constraints %}
+## Ограничения
+{{ constraints }}
+{% endif %}
+## Вывод
 Return ONLY a unified diff in standard format (--- a/file +++ b/file).
 No explanations. No markdown code fences. Diff only.
