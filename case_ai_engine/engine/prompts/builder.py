@@ -49,6 +49,17 @@ class PromptBuilder:
         )
         return result
 
+    def render_nl_to_spec(self, user_request: str) -> str:
+        """Сформировать промпт для конвертации NL-запроса в YAML-спецификацию.
+
+        Args:
+            user_request: описание проекта на естественном языке.
+        """
+        tmpl = self._env.get_template("nl_to_spec.j2")
+        result = tmpl.render(user_request=user_request)
+        logger.debug("render_nl_to_spec: len=%d", len(result))
+        return result
+
     def render_repair_diff(
         self,
         logs: str,

@@ -9,12 +9,17 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+import yaml
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from engine.llm.ollama_client import OllamaClient
 from engine.orchestrator import run_pipeline
+from engine.prompts.builder import PromptBuilder
+
+_prompt_builder = PromptBuilder()
 
 # ---------------------------------------------------------------------------
 # Константы
@@ -68,16 +73,36 @@ def create_job(req: GenerateRequest) -> JobStatus:
     """Запустить задачу генерации кода в фоновом потоке."""
     job_id = uuid.uuid4().hex[:12]
 
-    # Сохраняем spec во временный файл внутри outputs
+    # Временный файл для спецификации (заполняется в воркере)
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     spec_file = OUTPUTS_DIR / f"_spec_{job_id}.yaml"
-    spec_file.write_text(req.spec_yaml, encoding="utf-8")
 
-    jobs[job_id] = {"status": "pending", "run_id": None, "error": None}
+    jobs[job_id] = {
+        "status": "pending",
+        "run_id": None,
+        "error": None,
+        "spec_yaml": None,
+    }
 
     def _worker() -> None:
         jobs[job_id]["status"] = "running"
         try:
+            # Если пользователь ввёл не YAML-словарь — конвертируем через LLM
+            spec_text = req.spec_yaml
+            try:
+                parsed = yaml.safe_load(spec_text)
+                is_dict = isinstance(parsed, dict)
+            except yaml.YAMLError:
+                is_dict = False
+
+            if not is_dict:
+                with OllamaClient(model=req.model) as client:
+                    prompt = _prompt_builder.render_nl_to_spec(spec_text)
+                    spec_text = client.generate(prompt)
+                jobs[job_id]["spec_yaml"] = spec_text
+
+            spec_file.write_text(spec_text, encoding="utf-8")
+
             run_id = run_pipeline(
                 spec_path=spec_file,
                 model=req.model,
