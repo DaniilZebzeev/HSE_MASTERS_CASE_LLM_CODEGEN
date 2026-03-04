@@ -185,6 +185,39 @@ class TestRunPipeline:
         run_dir = out / run_id
         assert "[project]" in (run_dir / "pyproject.toml").read_text(encoding="utf-8")
 
+    def test_создаёт_report_json_и_report_md(
+        self, minimal_spec: Path, tmp_path: Path
+    ) -> None:
+        """После завершения pipeline в run_dir есть report.json и report.md."""
+        out = tmp_path / "out"
+        with (
+            patch("engine.orchestrator.OllamaClient") as MockClient,
+            patch("engine.orchestrator.verify_project", return_value=_ok_verify()),
+        ):
+            _configure_client(MockClient, _round_robin(list(_FAKE_FILES.values())))
+            run_id = run_pipeline(str(minimal_spec), model="test", output_dir=out)
+        run_dir = out / run_id
+        assert (run_dir / "report.json").exists()
+        assert (run_dir / "report.md").exists()
+
+    def test_report_json_содержит_success_true(
+        self, minimal_spec: Path, tmp_path: Path
+    ) -> None:
+        """При успешной верификации report.json содержит success=true."""
+        import json
+
+        out = tmp_path / "out"
+        with (
+            patch("engine.orchestrator.OllamaClient") as MockClient,
+            patch("engine.orchestrator.verify_project", return_value=_ok_verify()),
+        ):
+            _configure_client(MockClient, _round_robin(list(_FAKE_FILES.values())))
+            run_id = run_pipeline(str(minimal_spec), model="test", output_dir=out)
+        data = json.loads((out / run_id / "report.json").read_text(encoding="utf-8"))
+        assert data["success"] is True
+        assert data["iterations"] == 0
+        assert data["files_generated"] == 6
+
 
 # ---------------------------------------------------------------------------
 # Repair-loop

@@ -1,40 +1,34 @@
-"""Сбор метрик конвейера кодогенерации."""
+"""Модель метрик запуска конвейера кодогенерации."""
 
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
-class GenerationMetrics:
-    """Метрики одной попытки генерации файла."""
+class RunMetrics:
+    """Метрики одного запуска pipeline.
 
-    file_path: str
+    Attributes:
+        run_id: уникальный идентификатор запуска.
+        model: имя модели Ollama.
+        spec_path: путь к файлу спецификации.
+        success: True, если верификация прошла успешно.
+        iterations: число выполненных repair-итераций (0 = успех с первой попытки).
+        time_total_sec: суммарное время выполнения в секундах.
+        fail_profile: число провалов каждого инструмента {"format", "lint", "tests"}.
+        patch_volume_lines: суммарное число строк во всех применённых патчах.
+        files_generated: число сгенерированных файлов.
+        started_at: ISO-метка времени начала запуска (UTC).
+    """
+
+    run_id: str
     model: str
-    iterations: int = 0  # Число итераций repair-loop
-    llm_calls: int = 0  # Суммарное число обращений к LLM
-    total_tokens: int = 0  # Суммарное число токенов (если доступно)
-    elapsed_seconds: float = 0.0
-    passed: bool = False
-    errors: list[str] = field(default_factory=list)
-
-
-class MetricsCollector:
-    """Собирает и хранит метрики всего запуска конвейера."""
-
-    def __init__(self) -> None:
-        self._records: list[GenerationMetrics] = []
-        self._start: float = time.monotonic()
-
-    def record(self, metrics: GenerationMetrics) -> None:
-        """Добавить запись метрик."""
-        self._records.append(metrics)
-
-    def all(self) -> list[GenerationMetrics]:
-        """Вернуть все записи метрик."""
-        return list(self._records)
-
-    def elapsed(self) -> float:
-        """Вернуть суммарное прошедшее время в секундах."""
-        return time.monotonic() - self._start
+    spec_path: str
+    success: bool
+    iterations: int
+    time_total_sec: float
+    fail_profile: dict[str, int]
+    patch_volume_lines: int
+    files_generated: int
+    started_at: str
