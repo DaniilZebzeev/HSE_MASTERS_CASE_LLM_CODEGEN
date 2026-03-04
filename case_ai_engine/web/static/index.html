@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CASE AI Engine</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===== Левая панель: история запусков ===== -->
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <span class="logo">&#9889; CASE AI Engine</span>
+      <button id="new-btn" title="Новый запуск">+</button>
+    </div>
+    <ul id="runs-list"></ul>
+  </aside>
+
+  <!-- ===== Центральная панель: чат ===== -->
+  <main id="chat-panel">
+    <div id="messages"></div>
+
+    <form id="input-form">
+      <div id="form-row">
+        <div id="form-fields">
+          <textarea
+            id="spec-input"
+            placeholder="Вставьте спецификацию YAML…"
+            rows="8"
+          ></textarea>
+          <div id="model-row">
+            <label for="model-input">Модель:</label>
+            <input
+              id="model-input"
+              type="text"
+              value="codellama:7b-instruct"
+            />
+            <label for="iters-input">Repair-итераций:</label>
+            <input id="iters-input" type="number" value="3" min="1" max="10" />
+          </div>
+        </div>
+        <button id="send-btn" type="submit">&#9658; Генерировать</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- ===== Правая панель: просмотр файлов ===== -->
+  <aside id="viewer-panel">
+    <div id="viewer-header">
+      <span id="viewer-title">Файлы проекта</span>
+      <button id="download-btn" style="display:none" title="Скачать ZIP">
+        &#8595; ZIP
+      </button>
+    </div>
+    <ul id="file-list"></ul>
+    <pre id="file-content"><code id="file-code"></code></pre>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
