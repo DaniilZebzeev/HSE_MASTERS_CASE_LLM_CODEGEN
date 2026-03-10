@@ -1,4 +1,4 @@
-"""Раннер верификации: запускает black, ruff и pytest над сгенерированным проектом."""
+"""Verification runner for generated projects (black, ruff, pytest)."""
 
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Таймауты (секунды)
+# Timeouts (seconds)
 _TIMEOUT_DEFAULT = 30
 _TIMEOUT_PYTEST = 60
 
 
 @dataclass
 class VerifyResult:
-    """Результат запуска одного инструмента верификации."""
+    """Result of a single verification tool run."""
 
     tool: str
     ok: bool
@@ -36,7 +36,7 @@ def _run(
     project_root: Path,
     timeout: int = _TIMEOUT_DEFAULT,
 ) -> VerifyResult:
-    """Запустить команду и вернуть VerifyResult."""
+    """Run a command and return a normalized VerifyResult."""
     logger.debug("Запуск [%s]: %s в %s", tool, " ".join(cmd), project_root)
     try:
         proc = subprocess.run(
@@ -44,6 +44,8 @@ def _run(
             cwd=project_root,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
         )
     except subprocess.TimeoutExpired:
@@ -55,37 +57,40 @@ def _run(
             stdout="",
             stderr=f"TimeoutExpired: {tool} не завершился за {timeout}с",
         )
+
     ok = proc.returncode == 0
     logger.debug("%s завершился с кодом %d", tool, proc.returncode)
+    stdout = proc.stdout if isinstance(proc.stdout, str) else ""
+    stderr = proc.stderr if isinstance(proc.stderr, str) else ""
     return VerifyResult(
         tool=tool,
         ok=ok,
         exit_code=proc.returncode,
-        stdout=proc.stdout,
-        stderr=proc.stderr,
+        stdout=stdout,
+        stderr=stderr,
     )
 
 
 def run_black(project_root: Path) -> VerifyResult:
-    """Запустить black --check и вернуть VerifyResult."""
+    """Run black --check."""
     cmd = [sys.executable, "-m", "black", "--check", "."]
     return _run("black", cmd, project_root)
 
 
 def run_ruff(project_root: Path) -> VerifyResult:
-    """Запустить ruff check и вернуть VerifyResult."""
+    """Run ruff check."""
     cmd = [sys.executable, "-m", "ruff", "check", "."]
     return _run("ruff", cmd, project_root)
 
 
 def run_pytest(project_root: Path) -> VerifyResult:
-    """Запустить pytest -q и вернуть VerifyResult."""
+    """Run pytest -q."""
     cmd = [sys.executable, "-m", "pytest", "-q"]
     return _run("pytest", cmd, project_root, timeout=_TIMEOUT_PYTEST)
 
 
 def verify_project(project_root: Path) -> list[VerifyResult]:
-    """Запустить все инструменты верификации и вернуть список результатов."""
+    """Run all verification tools and return their results."""
     return [
         run_black(project_root),
         run_ruff(project_root),

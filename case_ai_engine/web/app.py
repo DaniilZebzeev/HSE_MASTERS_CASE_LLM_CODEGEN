@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import threading
 import uuid
 import zipfile
@@ -43,7 +44,7 @@ class GenerateRequest(BaseModel):
     """Параметры запуска генерации."""
 
     spec_yaml: str
-    model: str = "codellama:7b-instruct"
+    model: str = "qwen3-coder:30b"
     max_iters: int = 3
 
 
@@ -61,6 +62,33 @@ class JobStatus(BaseModel):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(title="CASE AI Engine", version="0.1.0")
+
+# Удаляем markdown-обёртку ```yaml ... ``` перед YAML-парсингом.
+_CODE_FENCE_RE = re.compile(
+    r"^\s*```(?:yaml|yml|json)?\s*\n(?P<body>[\s\S]*?)\n```\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def _strip_code_fence(text: str) -> str:
+    """Вернуть текст без markdown code fences, если они есть."""
+    candidate = text.strip()
+    match = _CODE_FENCE_RE.match(candidate)
+    if not match:
+        return candidate
+    return match.group("body").strip()
+
+
+def _parse_spec_dict(text: str) -> dict[str, Any] | None:
+    """Распарсить YAML/JSON-спецификацию и вернуть словарь или None."""
+    candidate = _strip_code_fence(text)
+    try:
+        parsed = yaml.safe_load(candidate)
+    except yaml.YAMLError:
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return parsed
 
 
 # ---------------------------------------------------------------------------
@@ -87,21 +115,26 @@ def create_job(req: GenerateRequest) -> JobStatus:
     def _worker() -> None:
         jobs[job_id]["status"] = "running"
         try:
-            # Если пользователь ввёл не YAML-словарь — конвертируем через LLM
-            spec_text = req.spec_yaml
-            try:
-                parsed = yaml.safe_load(spec_text)
-                is_dict = isinstance(parsed, dict)
-            except yaml.YAMLError:
-                is_dict = False
-
-            if not is_dict:
+            # Если пользователь ввёл не YAML-словарь — конвертируем через LLM.
+            spec_text = _strip_code_fence(req.spec_yaml)
+            spec_dict = _parse_spec_dict(spec_text)
+            if spec_dict is None:
                 with OllamaClient(model=req.model) as client:
                     prompt = _prompt_builder.render_nl_to_spec(spec_text)
-                    spec_text = client.generate(prompt)
+                    spec_text = _strip_code_fence(client.generate(prompt))
+                spec_dict = _parse_spec_dict(spec_text)
+                if spec_dict is None:
+                    raise ValueError(
+                        "Не удалось преобразовать запрос в YAML-спецификацию. "
+                        "Опишите требования к API обычным текстом без markdown-блоков."
+                    )
                 jobs[job_id]["spec_yaml"] = spec_text
 
-            spec_file.write_text(spec_text, encoding="utf-8")
+            # Пишем нормализованный YAML для следующего шага пайплайна.
+            spec_file.write_text(
+                yaml.safe_dump(spec_dict, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
 
             run_id = run_pipeline(
                 spec_path=spec_file,

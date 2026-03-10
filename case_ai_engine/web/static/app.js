@@ -173,7 +173,7 @@ inputForm.addEventListener("submit", async (e) => {
   const specYaml = specInput.value.trim();
   if (!specYaml) return;
 
-  const model = modelInput.value.trim() || "codellama:7b-instruct";
+  const model = modelInput.value.trim() || "qwen3-coder:30b";
   const maxIters = parseInt(itersInput.value, 10) || 3;
 
   // Сообщение пользователя

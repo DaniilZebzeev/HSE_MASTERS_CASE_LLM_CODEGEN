@@ -8,11 +8,34 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from web.app import app, jobs
+from web.app import _parse_spec_dict, _strip_code_fence, app, jobs
 
 # ---------------------------------------------------------------------------
 # Фикстуры
 # ---------------------------------------------------------------------------
+
+
+class TestSpecParsingHelpers:
+    """Helper parsing tests for NL and fenced YAML input."""
+
+    def test_strip_code_fence(self) -> None:
+        raw = "```yaml\nservice:\n  name: demo\n```\n"
+        assert _strip_code_fence(raw) == "service:\n  name: demo"
+
+    def test_parse_spec_dict_plain_yaml(self) -> None:
+        parsed = _parse_spec_dict("service:\n  name: demo\n  stack: python-fastapi")
+        assert isinstance(parsed, dict)
+        assert parsed["service"]["name"] == "demo"
+
+    def test_parse_spec_dict_fenced_yaml(self) -> None:
+        parsed = _parse_spec_dict(
+            "```yaml\nservice:\n  name: demo\n  stack: python-fastapi\n```"
+        )
+        assert isinstance(parsed, dict)
+        assert parsed["service"]["stack"] == "python-fastapi"
+
+    def test_parse_spec_dict_invalid(self) -> None:
+        assert _parse_spec_dict("Напиши мне ручку на FastAPI") is None
 
 
 @pytest.fixture(autouse=True)

@@ -31,17 +31,17 @@ def _failing_files(results: list[VerifyResult]) -> list[str]:
         if r.ok:
             continue
         if r.tool == "ruff":
-            for err in parse_ruff(r.stdout + "\n" + r.stderr):
+            for err in parse_ruff((r.stdout or "") + "\n" + (r.stderr or "")):
                 fp = err.split(":")[0]
                 if fp:
                     files.add(fp)
         elif r.tool == "pytest":
-            for test_id in parse_pytest(r.stdout):
+            for test_id in parse_pytest(r.stdout or ""):
                 fp = test_id.split("::")[0]
                 if fp:
                     files.add(fp)
         elif r.tool == "black":
-            for line in (r.stdout + r.stderr).splitlines():
+            for line in ((r.stdout or "") + (r.stderr or "")).splitlines():
                 if "would reformat" in line:
                     parts = line.split()
                     if parts:
@@ -143,7 +143,7 @@ def run_pipeline(
 
             # Формируем repair-контекст
             logs = "\n".join(
-                f"[{r.tool}]\n{r.stdout}{r.stderr}" for r in results if not r.ok
+                f"[{r.tool}]\n{r.stdout or ''}{r.stderr or ''}" for r in results if not r.ok
             )
             fail_files = _failing_files(results)
             snippets = {

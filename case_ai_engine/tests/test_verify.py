@@ -214,6 +214,16 @@ class TestRunner:
         assert result.exit_code == -1
         assert "TimeoutExpired" in result.stderr
 
+    def test_run_ruff_normalizes_none_streams(self, root: Path) -> None:
+        """If subprocess returns None in streams, runner normalizes them to empty strings."""
+        with patch(
+            "subprocess.run",
+            return_value=_make_proc(1, stdout=None, stderr=None),
+        ):
+            result = run_ruff(root)
+        assert result.ok is False
+        assert result.stdout == ""
+        assert result.stderr == ""
     def test_verify_result_repr(self) -> None:
         """VerifyResult.__repr__ содержит статус."""
         r = VerifyResult(tool="black", ok=True, exit_code=0, stdout="", stderr="")
